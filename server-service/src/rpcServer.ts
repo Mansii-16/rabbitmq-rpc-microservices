@@ -1,38 +1,25 @@
 import * as amqp from "amqplib";
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL ?? "amqp://rabbitmq";
-const RPC_QUEUE = "rpc_queue";
-
-async function startServer() {
-  const connection = await amqp.connect(RABBITMQ_URL);
+async function server() {
+  const connection = await amqp.connect("amqp://rabbitmq");
   const channel = await connection.createChannel();
 
-  await channel.assertQueue(RPC_QUEUE, { durable: false });
+  await channel.assertQueue("rpc_queue");
 
-  // Process only one message at a time (RPC best practice)
-  channel.prefetch(1);
+  console.log("Server: Waiting for message");
 
-  console.log("Server: Waiting for RPC requests...");
-
-  channel.consume(RPC_QUEUE, (msg) => {
+  channel.consume("rpc_queue", (msg) => {
     if (!msg) return;
 
-    const request = msg.content.toString();
-    console.log("Server: Received ->", request);
-
-    // 🔥 Optimized: reuse correlationId from client
-    const response = `Hello received by Server: ${request}`;
+    console.log("Server: Received ->", msg.content.toString());
 
     channel.sendToQueue(
       msg.properties.replyTo,
-      Buffer.from(response),
-      {
-        correlationId: msg.properties.correlationId
-      }
+      Buffer.from("Hello Client")
     );
 
     channel.ack(msg);
   });
 }
 
-startServer();
+server();

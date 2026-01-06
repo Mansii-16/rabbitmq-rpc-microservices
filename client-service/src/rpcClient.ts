@@ -1,40 +1,26 @@
 import * as amqp from "amqplib";
-import { randomUUID } from "crypto";
 
-const RABBITMQ_URL = "amqp://rabbitmq";
-const RPC_QUEUE = "rpc_queue";
-
-async function startClient() {
-  const connection = await amqp.connect(RABBITMQ_URL);
+async function client() {
+    
+  const connection = await amqp.connect("amqp://rabbitmq");
   const channel = await connection.createChannel();
 
   const replyQueue = await channel.assertQueue("", { exclusive: true });
-  const correlationId = randomUUID(); // ✅ BEST PRACTICE
 
-  console.log("Client: Sending Hello message...");
+  console.log("Client: Sending message");
 
-  channel.consume(
-    replyQueue.queue,
-    (msg) => {
-      if (msg && msg.properties.correlationId === correlationId) {
-        console.log("Client: Response ->", msg.content.toString());
-        setTimeout(() => {
-          connection.close();
-          process.exit(0);
-        }, 500);
-      }
-    },
-    { noAck: true }
-  );
+  channel.consume(replyQueue.queue, (msg) => {
+    if (msg) {
+      console.log("Client: Received reply ->", msg.content.toString());
+      connection.close();
+    }
+  }, { noAck: true });
 
   channel.sendToQueue(
-    RPC_QUEUE,
-    Buffer.from("Hello from Client Service"),
-    {
-      correlationId,
-      replyTo: replyQueue.queue
-    }
+    "rpc_queue",
+    Buffer.from("Hello Server"),
+    { replyTo: replyQueue.queue }
   );
 }
 
-startClient();
+client();
