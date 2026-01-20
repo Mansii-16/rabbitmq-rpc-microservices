@@ -5,7 +5,7 @@ export async function recvMail() {
     const connection = await amqp.connect("amqp://rabbitmq");
     const channel = await connection.createChannel();
 
-    await channel.assertQueue("mail_queue", { durable: false });
+    await channel.assertQueue("mail_queue", { durable: true });
 
     console.log("Waiting for mail messages...");
 

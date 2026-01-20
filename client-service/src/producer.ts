@@ -13,8 +13,8 @@ const message ={
     subject:"hello sample mail",
     body:"Hello Mansi !! I hope u are doing well "
 }
-    await channel.assertExchange(exchange,"direct",{durable:false});
-    await channel.assertQueue("mail_queue",{durable:false});
+    await channel.assertExchange(exchange,"direct",{durable:true});
+    await channel.assertQueue("mail_queue",{durable:true});
     await channel.bindQueue("mail_queue",exchange,routingkey);
 
     channel.publish(exchange,routingkey,Buffer.from(JSON.stringify(message)))

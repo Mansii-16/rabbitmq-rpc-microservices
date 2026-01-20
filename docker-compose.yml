@@ -1,14 +1,12 @@
-version: "3.8"
-
 services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"     # RabbitMQ
-      - "15672:15672"   # Management UI
+      - "5672:5672"
+      - "15672:15672"
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,4 +29,16 @@ services:
         condition: service_healthy
       server-service:
         condition: service_started
-    restart: "no"
+    restart: "always"
+
+  sample-service:
+    build:
+      context: ./sample-service
+    container_name: sample-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      client-service:
+        condition: service_started
+    restart: "always"
+

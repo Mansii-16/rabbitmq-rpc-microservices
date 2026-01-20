@@ -17,4 +17,4 @@ COPY . .
 RUN npm run build
 
 # 7️⃣ Run client service
-CMD ["node", "dist/rpcClient.js"]
+CMD ["node", "dist/index.js"]
